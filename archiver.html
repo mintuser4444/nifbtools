@@ -1,0 +1,132 @@
+<html>
+  <head>
+    <style>
+      .fail {background-color: red;}
+      .pending {background-color: yellow;}
+      .success {background-color: green;}
+    </style>
+    <script>
+// html elements have a class list that can be set in html like
+// <thing class="success">
+// css can key into element classes with
+// .success {backgroung-color: green;}
+const setElementStatus = (element, statusToSet) => {
+  for(const status of ['success', 'pending', 'fail']){
+    if(element.classList.contains(status) && status != statusToSet){
+        element.classList.remove('success');
+    }
+  }
+  if(!element.classList.contains(statusToSet)){
+    element.classList.add(statusToSet);
+  }
+};
+// wrapper for the fetch function that handles annoying boilerplate
+// and also sets a css class on an element
+const apiCall = async (api, body, element)=>{
+  console.log('apicall', api, body);
+  setElementStatus(element, 'pending');
+  const res = await fetch('/api/'+api, {
+    method: 'post', 
+    headers:{'Content-Type': 'application/json'}, // mandatory for basically no reason
+    body: JSON.stringify(body, null, 2)
+  });
+  console.log('api res', res)
+  if(res.status < 400){
+    setElementStatus(element, 'succcess');
+  } else {
+    setElementStatus(element, 'fail');
+  }
+  const json = await res.json();
+  console.log('api json', json);
+  return json;
+};
+// it's nice to have an id for a request idk
+let addFormId = 0;
+newAddForm = () => {
+  const theId = addFormId;
+  addFormId++;
+  const theDiv = document.createElement('div');
+  document.getElementById('adds').appendChild(theDiv);
+  theDiv.id = addFormId;
+ 
+  const labelInputThing = (label, input) => {
+    const myp = document.createElement('p');
+    theDiv.appendChild(myp);
+    myp.textContent = label;
+    myp.appendChild(input);
+  }
+  const textInput = (label) => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.size = 100;
+    labelInputThing(label, input);
+    return input;
+  }
+  const selectInput = (label, selections) => {
+    const sel = document.createElement('select');
+    for(const item of selections){
+      const option = document.createElement('option');
+      sel.appendChild(option);
+      option.textContent = item;
+    }
+    labelInputThing(label, sel);
+    return sel;
+  }
+ 
+  const urlInput = textInput('url');
+  const typeInput = selectInput('type', ['Sermons', 'Sermon_Clips']);
+  const preacherInput = selectInput('preacher', [
+    'Pastor_Anderson',
+    'Pastor_Berzins',
+    'Bro_Powell',
+    'Pastor_Robinson',
+    'Pastor_Shelley',
+    'Pastor_Thompson'
+  ]);
+  const titleInput = textInput('title');
+
+  urlInput.onchange = async () => {
+    const res = await apiCall('title', {url: urlInput.value, theId}, urlInput.parentElement);
+    if(titleInput.value.trim() == '')
+      titleInput.value = res.title;
+  };
+ 
+  const getTitleButton = document.createElement('input');
+  urlInput.parentElement.appendChild('getTitleButton');
+  getTitleButton.type = 'button';
+  getTitleButton.value = 'get title';
+  getTitleButton.onclick = () => {
+    const res = await apiCall('title', {url: urlInput.value, theId}, urlInput.parentElement);
+    titleInput.value = res.title;
+  };
+
+  const titleCaseButton = document.createElement('input');
+  theDiv.appendChild(titleCaseButton);
+  titleCaseButton.type = 'button';
+  titleCaseButton.value = 'Title To Title Case';
+  titleCaseButton.onclick = () => {
+    titleInput.value = titleInput.value.split(' ')
+      .map(x=>(x[0]?x[0].toUpperCase():'')+x.slice(1))
+      .join(' ');
+  };
+
+  const getButton = document.createElement('input');
+  theDiv.appendChild(getButton);
+  getButton.type = 'button';
+  getButton.value = 'get';
+  getButton.onclick = async () => {
+    await apiCall('get', {
+      url: urlInput.value,
+      type: typeInput.value,
+      pastor: preacherInput.value,
+      title: titleInput.value
+    }, theDiv);
+  };
+};
+    </script>
+  </head>
+  <body>
+    <div id='adds'></div>
+    <input type='button' onclick='javascript:newAddForm()' value='add another'>
+  </body>
+</html>
