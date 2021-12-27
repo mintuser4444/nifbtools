@@ -1,4 +1,17 @@
 const sh = require('shelljs');
+const tabletojson = require('tabletojson').Tabletojson;
+const yargs = require('yargs');
+
+const argv = yargs
+  .option('baseDir', {
+    type: "string",
+    description: "the base directory where the video/ and audio/ directories are"
+  })
+  .argv;
+if(argv.baseDir){
+  console.log('setting base dir to', argv.baseDir)
+  sh.cd(argv.baseDir);
+}
 
 let rss = 0;
 let download = 0;
@@ -26,7 +39,6 @@ console.log(`rss is ${rss} download is ${download}`);
 let downloaded = 0;
 let existed = 0;
 
-const tabletojson = require('tabletojson').Tabletojson;
 let table;
 const tjp = tabletojson.convertUrl(
   'http://www.faithfulwordbaptist.org/page5.html',
