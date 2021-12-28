@@ -9,6 +9,7 @@
   "author": "",
   "license": "UNLICENSED",
   "dependencies": {
+    "cli-progress": "^3.9.1",
     "express": "^4.17.2",
     "jsdom": "^19.0.0",
     "shelljs": "^0.8.4",
